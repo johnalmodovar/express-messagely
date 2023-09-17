@@ -56,11 +56,36 @@ describe("Messages Routes Test", function () {
       expect(message.body).toEqual("this is a message");
     });
 
-    test("with wrong token")
+    test("get details with wrong token", async function () {
+      let response = await request(app)
+        .get(`/messages/${messageId}`)
+        .query({ _token: "bad token"})
+
+      expect(response.status).toEqual(401);
+    })
+
+    test("get details with no token", async function () {
+      let response = await request(app).get(`/messages/${messageId}`);
+
+      expect(response.status).toEqual(401);
+    })
   })
 
+  describe("POST to create message", function () {
+    test ("successfully create message", async function () {
+      let response = await request(app)
+        .post("/messages")
+        .send({
+          to_username: "test2",
+          body: "This is a newly created message"
+        })
+        .query({ _token: user1Token})
 
+        const newMessage = response.body.message;
+        expect(response.status).toEqual(200);
 
-
-
+        expect(newMessage.body).toEqual('This is a newly created message');
+        expect(newMessage.to_username).toEqual("test2");
+    })
+  })
 });
