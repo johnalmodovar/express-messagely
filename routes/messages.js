@@ -22,26 +22,32 @@ const router = new Router();
  **/
 router.get("/:id",
   ensureLoggedIn,
-  async function (req, res){
-    let messageId = req.params.id;
+  async function (req, res) {
+    //TODO: refactor: message.get does a lot of this checking for us,
+    //pseudo code:
+    //get message
+    //check message.fromUser and messageToUser, if logged in is not included,
+    //throw unauthorized
+
+    const messageId = req.params.id;
     const username = res.locals.user.username;
     const messagesTo = await User.messagesTo(username);
     const messagesFrom = await User.messagesFrom(username);
     const allMessages = messagesTo.concat(messagesFrom);
 
-    let matchingMessage = allMessages.filter(message => {
+    const matchingMessage = allMessages.filter(message => {
       return (message.id === messageId);
-    })
+    });
 
     let message;
-    if (matchingMessage){
+    if (matchingMessage) {
       message = await Message.get(messageId);
-      return res.json({message})
+      return res.json({ message });
     } else {
       throw new UnauthorizedError;
     }
   }
-)
+);
 
 /** POST / - post message.
  *
@@ -53,12 +59,12 @@ router.post("/",
   ensureLoggedIn,
   async function (req, res) {
     const from_username = res.locals.user.username;
-    const {to_username, body} = req.body;
+    const { to_username, body } = req.body;
 
-    const message = await Message.create({from_username, to_username, body});
-    return res.json({message});
+    const message = await Message.create({ from_username, to_username, body });
+    return res.json({ message });
   }
-)
+);
 
 /** POST/:id/read - mark message as read:
  *
@@ -69,24 +75,26 @@ router.post("/",
  **/
 router.post("/:id/read",
   ensureLoggedIn,
-  async function (req, res){
+  async function (req, res) {
+    //TODO: Refactor: message.get can similarly help us out here.
+
     const messageId = req.params.id;
     const username = res.locals.user.username;
 
     const messages = await User.messagesTo(username);
 
-    let matchingMessage = messages.filter(message => {
+    const matchingMessage = messages.filter(message => {
       return (message.id === messageId);
-    })
+    });
 
     let message;
-    if (matchingMessage){
+    if (matchingMessage) {
       message = await Message.markRead(messageId);
-      return res.json({message})
+      return res.json({ message });
     } else {
       throw new UnauthorizedError();
     }
   }
-)
+);
 
 module.exports = router;

@@ -30,11 +30,11 @@ describe("Users Routes Test", function () {
       phone: "+24155550000",
     });
 
-    let response = await request(app)
-          .post("/auth/login")
-          .send({ username: "test1", password: "password" });
+    // let response = await request(app)
+    //       .post("/auth/login")
+    //       .send({ username: "test1", password: "password" });
 
-    let token = response.body.token;
+    // let token = response.body.token;
   });
 
   /** POST /auth/register => token  */
