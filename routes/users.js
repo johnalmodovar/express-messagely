@@ -27,6 +27,7 @@ router.get("/",
 router.get("/:username",
   ensureCorrectUser,
   async function (req, res) {
+    console.log('reached user detail request route');
     const user = await User.get(req.params.username);
     return res.json({ user });
   });

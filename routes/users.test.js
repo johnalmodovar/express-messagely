@@ -32,8 +32,8 @@ describe("Users Routes Test", function () {
       phone: "+24155550000",
     });
 
-    user1Token = jwt.sign(u1.username , SECRET_KEY);
-    user2Token = jwt.sign(u2.username , SECRET_KEY);
+    user1Token = jwt.sign({ username: u1.username }, SECRET_KEY);
+    user2Token = jwt.sign({ username: u2.username }, SECRET_KEY);
   });
 
   /** GET /users => {...} */
@@ -73,7 +73,7 @@ describe("Users Routes Test", function () {
 
   });
 
- /** GET /:username */
+//  /** GET /:username */
 
   describe("GET /:username", function () {
     test ("get a single user's details", async function () {
@@ -81,7 +81,10 @@ describe("Users Routes Test", function () {
         .get("/users/test1")
         .query({ _token: user1Token });
 
-      expect(response.body).toEqual("test1");
+      const user = response.body.user;
+      expect(response.status).toEqual(200);
+      expect(user.first_name).toEqual("Test1");
+      expect(user.phone).toEqual("+14155550000");
     });
   });
 
