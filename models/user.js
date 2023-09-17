@@ -5,17 +5,15 @@
 const bcrypt = require("bcrypt");
 const { DB_URI, SECRET_KEY, BCRYPT_WORK_FACTOR } = require("../config");
 const db = require("../db");
+const {NotFoundError, BadRequestError } = require("../expressError");
 
 class User {
 
   /** Register new user. Returns
    *    {username, password, first_name, last_name, phone}
    */
-
-  //FIXME: register needs to set last_login as well.
   static async register({ username, password, first_name, last_name, phone }) {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-    const join_at = new Date(); //This solved it: easy enough.
 
     const results = await db.query(
       `INSERT INTO users (username,
@@ -25,40 +23,47 @@ class User {
                           phone,
                           join_at,
                           last_login_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $6)
+      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING username, password, first_name, last_name, phone`,
-        [username, hashedPassword, first_name, last_name, phone, join_at]
+        [username, hashedPassword, first_name, last_name, phone]
     );
-
     const user = results.rows[0];
 
     return user;
   }
 
   /** Authenticate: is username/password valid? Returns boolean. */
-
   static async authenticate(username, password) {
     const results = await db.query(
-      `SELECT password
+      `SELECT username, password
         FROM users
         WHERE username = $1`,
         [username]
     );
+    const user = results.rows[0];
+    if (!user) {
+      throw new NotFoundError;
+    }
 
-   return await bcrypt.compare(password, results.rows[0].password);
+   return (await bcrypt.compare(password, user.password) === true);
   }
 
   /** Update last_login_at for user */
   static async updateLoginTimestamp(username) {
-    let mostRecentLogin = new Date();//payload.iat;
 
     const results = await db.query(
       `UPDATE users
-      SET last_login_at=$1
-      WHERE username = $2`,
-      [mostRecentLogin, username]
+      SET last_login_at=CURRENT_TIMESTAMP
+      WHERE username = $1
+      RETURNING username, last_login_at`,
+      [username]
     );
-    return {username, last_login: mostRecentLogin};
+    const user = results.rows[0];
+    if (!user) {
+      throw new NotFoundError;
+    }
+
+    return user;
   }
 
   /** All: basic info on all users:
@@ -97,6 +102,10 @@ class User {
       WHERE username = $1`,
       [username]
     );
+    const user = results.rows[0];
+    if (!user) {
+      throw new NotFoundError;
+    }
     return results.rows[0];
   }
 
@@ -120,10 +129,19 @@ class User {
     WHERE from_username = $1`,
     [username]);
 
-    return results.rows.map(({ id, body, sent_at, read_at, username, first_name, last_name, phone }) => {
-      let formatted = {id, body, sent_at, read_at};
-      formatted["to_user"] = {username, first_name, last_name, phone};
-      return formatted;
+    return results.rows.map(({
+      id,
+      body,
+      sent_at,
+      read_at,
+      username,
+      first_name,
+      last_name,
+      phone
+    }) => {
+        let message = {id, body, sent_at, read_at};
+        message["to_user"] = {username, first_name, last_name, phone};
+        return message;
     });
   }
 
@@ -143,14 +161,23 @@ class User {
       users.last_name AS last_name,
       users.phone AS phone
     FROM messages as m
-      JOIN users ON m.from_username = users.username
-    WHERE from_username = $1`,
+      JOIN users ON m.to_username = $1
+    WHERE from_username = users.username`,
     [username]);
 
-    return results.rows.map(({ id, body, sent_at, read_at, username, first_name, last_name, phone }) => {
-      let formatted = {id, body, sent_at, read_at};
-      formatted["from_user"] = {username, first_name, last_name, phone};
-      return formatted;
+    return results.rows.map(({
+      id,
+      body,
+      sent_at,
+      read_at,
+      username,
+      first_name,
+      last_name,
+      phone
+    }) => {
+      let message = {id, body, sent_at, read_at};
+      message["from_user"] = {username, first_name, last_name, phone};
+      return message;
     });
   }
 }
