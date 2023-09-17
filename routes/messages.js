@@ -24,17 +24,17 @@ router.get("/:id",
   ensureLoggedIn,
   async function (req, res){
     let messageId = req.params.id;
+    const username = res.locals.user.username;
     const messagesTo = await User.messagesTo(username);
     const messagesFrom = await User.messagesFrom(username);
     const allMessages = messagesTo.concat(messagesFrom);
 
-    //Check if current id is in any of the messages;
-    let validUser = allMessages.includes(message => {
+    let matchingMessage = allMessages.filter(message => {
       return (message.id === messageId);
     })
 
     let message;
-    if (validUser){
+    if (matchingMessage){
       message = await Message.get(messageId);
       return res.json({message})
     } else {
@@ -52,10 +52,10 @@ router.get("/:id",
 router.post("/",
   ensureLoggedIn,
   async function (req, res) {
-    const from_username = res.locals.user;
+    const from_username = res.locals.user.username;
     const {to_username, body} = req.body;
 
-    const message = await Message.create(from_username, to_username, body);
+    const message = await Message.create({from_username, to_username, body});
     return res.json({message});
   }
 )
@@ -75,12 +75,12 @@ router.post("/:id/read",
 
     const messages = await User.messagesTo(username);
 
-    let validUser = messages.includes(message => {
+    let matchingMessage = messages.filter(message => {
       return (message.id === messageId);
     })
 
     let message;
-    if (validUser){
+    if (matchingMessage){
       message = await Message.markRead(messageId);
       return res.json({message})
     } else {

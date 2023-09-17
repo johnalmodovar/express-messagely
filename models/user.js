@@ -129,6 +129,7 @@ class User {
     WHERE from_username = $1`,
     [username]);
 
+
     return results.rows.map(({
       id,
       body,
