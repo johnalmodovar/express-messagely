@@ -5,7 +5,7 @@
 const bcrypt = require("bcrypt");
 const { DB_URI, SECRET_KEY, BCRYPT_WORK_FACTOR } = require("../config");
 const db = require("../db");
-const {NotFoundError, BadRequestError } = require("../expressError");
+const {NotFoundError, UnauthorizedError } = require("../expressError");
 
 class User {
 
@@ -42,7 +42,7 @@ class User {
     );
     const user = results.rows[0];
     if (!user) {
-      throw new NotFoundError;
+      throw new UnauthorizedError();
     }
 
    return (await bcrypt.compare(password, user.password) === true);
@@ -106,7 +106,7 @@ class User {
     if (!user) {
       throw new NotFoundError;
     }
-    return results.rows[0];
+    return user;
   }
 
   /** Return messages from this user.
