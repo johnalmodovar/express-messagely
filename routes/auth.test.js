@@ -25,25 +25,25 @@ describe("Auth Routes Test", function () {
 
   /** POST /auth/register => token  */
 
-  // describe("POST /auth/register", function () {
-  //   test("can register", async function () {
-  //     let response = await request(app)
-  //       .post("/auth/register")
-  //       .send({
-  //         username: "bob",
-  //         password: "secret",
-  //         first_name: "Bob",
-  //         last_name: "Smith",
-  //         phone: "+14150000000"
-  //       });
+  describe("POST /auth/register", function () {
+    test("can register", async function () {
+      let response = await request(app)
+        .post("/auth/register")
+        .send({
+          username: "bob",
+          password: "secret",
+          first_name: "Bob",
+          last_name: "Smith",
+          phone: "+14150000000"
+        });
 
-  //     let token = response.body.token;
-  //     expect(jwt.decode(token)).toEqual({
-  //       username: "bob",
-  //       iat: expect.any(Number)
-  //     });
-  //   });
-  // });
+      let token = response.body.token;
+      expect(jwt.decode(token)).toEqual({
+        username: "bob",
+        iat: expect.any(Number)
+      });
+    });
+  });
 
   /** POST /auth/login => token  */
 
