@@ -6,6 +6,8 @@
 
 require("dotenv").config();
 
+const jwt = require("jsonwebtoken");
+
 const DB_URI = (process.env.NODE_ENV === "test")
     ? "postgresql:///messagely_test"
     : "postgresql:///messagely";
@@ -19,4 +21,5 @@ module.exports = {
   DB_URI,
   SECRET_KEY,
   BCRYPT_WORK_FACTOR,
+  jwt
 };
