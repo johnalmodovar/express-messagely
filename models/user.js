@@ -2,6 +2,9 @@
 
 /** User of the site. */
 
+const bcrypt = require("bcrypt");
+const { DB_URI, SECRET_KEY, BCRYPT_WORK_FACTOR } = require("../config");
+
 class User {
 
   /** Register new user. Returns
@@ -9,11 +12,35 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+
+    const results = await db.query(
+      `INSERT INTO users (username,
+                          password,
+                          first_name,
+                          last_name,
+                          phone)
+      VALUES
+        ($1, $2, $3, $4, $5)`,
+        [username, hashedPassword, first_name, last_name, phone]
+    );
+
+    const user = new User(results.rows[0]);
+
+    return user;
   }
 
   /** Authenticate: is username/password valid? Returns boolean. */
 
   static async authenticate(username, password) {
+    const results = await db.query(
+      `SELECT password
+        FROM users
+        WHERE username = $1`,
+        [username]
+    );
+
+   return await bcrypt.compare(password, results.rows[0].password);
   }
 
   /** Update last_login_at for user */
