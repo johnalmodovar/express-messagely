@@ -1,12 +1,14 @@
 "use strict";
 
+const { SECRET_KEY, jwt } = require("../config");
 const request = require("supertest");
-const jwt = require("jsonwebtoken");
 
 const app = require("../app");
 const db = require("../db");
 const User = require("../models/user");
 
+let user1Token;
+let user2Token;
 
 describe("Users Routes Test", function () {
 
@@ -30,21 +32,19 @@ describe("Users Routes Test", function () {
       phone: "+24155550000",
     });
 
-    // let response = await request(app)
-    //       .post("/auth/login")
-    //       .send({ username: "test1", password: "password" });
-
-    // let token = response.body.token;
+    user1Token = jwt.sign(u1.username , SECRET_KEY);
+    user2Token = jwt.sign(u2.username , SECRET_KEY);
   });
 
-  /** POST /auth/register => token  */
+  /** GET /users => {...} */
 
   describe("GET /users", function () {
-    test("grabs all users list", async function () {
+    test("grabs all users list w/ right token", async function () {
       let response = await request(app)
-        .get("/users");
+        .get("/users")
+        .query({ _token: user1Token });
 
-      expect(response).toEqual({
+      expect(response.body).toEqual({
         users: [{
           username: "test1",
           first_name: "Test1",
@@ -55,33 +55,37 @@ describe("Users Routes Test", function () {
             last_name: "Testy2"}
         ]});
     });
+
+    test("what happens with bad token", async function () {
+      let response = await request(app)
+        .get("/users")
+        .query({ _token: "bad token" });
+
+      expect(response.status).toEqual(401);
+    });
+
+    test("what happens with no token", async function () {
+      let response = await request(app)
+        .get("/users")
+
+      expect(response.status).toEqual(401);
+    });
+
   });
 
-  /** POST /auth/login => token  */
+ /** GET /:username */
 
-  // describe("POST /auth/login", function () {
-  //   test("can login", async function () {
-  //     let response = await request(app)
-  //       .post("/auth/login")
-  //       .send({ username: "test1", password: "password" });
+  describe("GET /:username", function () {
+    test ("get a single user's details", async function () {
+      let response = await request(app)
+        .get("/users/test1")
+        .query({ _token: user1Token });
 
-  //     let token = response.body.token;
-  //     });
-  //   });
-  // });
-  //   test("won't login w/wrong password", async function () {
-  //     let response = await request(app)
-  //       .post("/auth/login")
-  //       .send({ username: "test1", password: "WRONG" });
-  //     expect(response.statusCode).toEqual(401);
-  //   });
+      expect(response.body).toEqual("test1");
+    });
+  });
 
-  //   test("won't login w/wrong user", async function () {
-  //     let response = await request(app)
-  //       .post("/auth/login")
-  //       .send({ username: "not-user", password: "password" });
-  //     expect(response.statusCode).toEqual(401);
-  //   });
+
 
 });
 
