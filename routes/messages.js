@@ -23,11 +23,6 @@ const router = new Router();
 router.get("/:id",
   ensureLoggedIn,
   async function (req, res) {
-    //TODO: refactor: message.get does a lot of this checking for us,
-    //pseudo code:
-    //get message
-    //check message.fromUser and messageToUser, if logged in is not included,
-    //throw unauthorized
 
     const messageId = req.params.id;
     const username = res.locals.user.username;
@@ -40,22 +35,6 @@ router.get("/:id",
       throw new UnauthorizedError();
     }
 
-
-    // const messagesTo = await User.messagesTo(username);
-    // const messagesFrom = await User.messagesFrom(username);
-    // const allMessages = messagesTo.concat(messagesFrom);
-
-    // const matchingMessage = allMessages.filter(message => {
-      // return (message.id === messageId);
-    // });
-//
-    // let message;
-    // if (matchingMessage) {
-      // message = await Message.get(messageId);
-      // return res.json({ message });
-    // } else {
-      // throw new UnauthorizedError;
-    // }
   }
 );
 
@@ -86,7 +65,6 @@ router.post("/",
 router.post("/:id/read",
   ensureLoggedIn,
   async function (req, res) {
-    //TODO: Refactor: message.get can similarly help us out here.
 
     const messageId = req.params.id;
     const username = res.locals.user.username;
@@ -97,17 +75,7 @@ router.post("/:id/read",
       readMessage = await Message.markRead(messageId);
       return res.json({ message: readMessage });
     }
-    // const matchingMessage = messages.filter(message => {
-      // return (message.id === messageId);
-    // });
 
-    // let message;
-    // if (matchingMessage) {
-      // message = await Message.markRead(messageId);
-      // return res.json({ message });
-    // } else {
-      // throw new UnauthorizedError();
-    // }
   }
 );
 
