@@ -30,7 +30,7 @@ router.post("/register", async function (req, res) {
   const { username, password, first_name, last_name, phone } = req.body;
 
   const user = await User.register({ username, password, first_name, last_name, phone });
-  console.log("What user is", user)
+
   const token = jwt.sign({ username }, SECRET_KEY);
 
   return res.json({ token });
