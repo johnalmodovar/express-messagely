@@ -31,21 +31,31 @@ router.get("/:id",
 
     const messageId = req.params.id;
     const username = res.locals.user.username;
-    const messagesTo = await User.messagesTo(username);
-    const messagesFrom = await User.messagesFrom(username);
-    const allMessages = messagesTo.concat(messagesFrom);
+    const message = await Message.get(messageId);
+    // message.from_user && message.to_user
 
-    const matchingMessage = allMessages.filter(message => {
-      return (message.id === messageId);
-    });
-
-    let message;
-    if (matchingMessage) {
-      message = await Message.get(messageId);
+    if (message.from_user.username === username || message.to_user.username) {
       return res.json({ message });
     } else {
-      throw new UnauthorizedError;
+      throw new UnauthorizedError();
     }
+
+
+    // const messagesTo = await User.messagesTo(username);
+    // const messagesFrom = await User.messagesFrom(username);
+    // const allMessages = messagesTo.concat(messagesFrom);
+
+    // const matchingMessage = allMessages.filter(message => {
+      // return (message.id === messageId);
+    // });
+//
+    // let message;
+    // if (matchingMessage) {
+      // message = await Message.get(messageId);
+      // return res.json({ message });
+    // } else {
+      // throw new UnauthorizedError;
+    // }
   }
 );
 
@@ -81,19 +91,23 @@ router.post("/:id/read",
     const messageId = req.params.id;
     const username = res.locals.user.username;
 
-    const messages = await User.messagesTo(username);
+    const message = await Message.get(messageId);
 
-    const matchingMessage = messages.filter(message => {
-      return (message.id === messageId);
-    });
-
-    let message;
-    if (matchingMessage) {
-      message = await Message.markRead(messageId);
-      return res.json({ message });
-    } else {
-      throw new UnauthorizedError();
+    if (message.to_user.username === username) {
+      readMessage = await Message.markRead(messageId);
+      return res.json({ message: readMessage });
     }
+    // const matchingMessage = messages.filter(message => {
+      // return (message.id === messageId);
+    // });
+
+    // let message;
+    // if (matchingMessage) {
+      // message = await Message.markRead(messageId);
+      // return res.json({ message });
+    // } else {
+      // throw new UnauthorizedError();
+    // }
   }
 );
 
